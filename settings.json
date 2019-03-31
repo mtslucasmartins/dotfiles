@@ -1,0 +1,41 @@
+{
+    "breadcrumbs.enabled": true,
+    //
+    // Default Font
+    "editor.fontFamily": "Monospaced, 'Courier New', Consolas, monospace",
+    // 
+    // Default Tabulation
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    //
+    // Other Editor Stuff..
+    "editor.autoIndent": false,
+    "editor.lineHeight": 18,
+    "editor.minimap.enabled": true,
+    "editor.renderWhitespace": "none",
+    "editor.suggestSelection": "first",
+    //
+    // Window Settings
+    "window.zoomLevel": 1,
+    "window.menuBarVisibility": "toggle",
+    //
+    // Workbench Settings
+    "workbench.activityBar.visible": true,
+    "workbench.colorTheme": "Darcula Theme from IntelliJ",
+    // POWERMODE!!!
+    "powermode.enabled": false,
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    //
+    // Python Specific Setting
+    "python.jediEnabled": false,
+    "[python]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    //
+    // SCSS Setting
+    "[scss]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    }
+}
