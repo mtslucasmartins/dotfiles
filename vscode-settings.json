@@ -16,7 +16,7 @@
     "editor.suggestSelection": "first",
     //
     // Window Settings
-    "window.zoomLevel": 1,
+    "window.zoomLevel": 0,
     "window.menuBarVisibility": "toggle",
     //
     // Workbench Settings
@@ -37,5 +37,17 @@
     "[scss]": {
         "editor.insertSpaces": true,
         "editor.tabSize": 2
-    }
+    },
+    //
+    // JavaScript / TypeScript
+    "[javascript]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "[typescript]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "javascript.preferences.quoteStyle": "single",
+    "typescript.preferences.quoteStyle": "single"
 }
