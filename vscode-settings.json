@@ -21,7 +21,6 @@
     //
     // Workbench Settings
     "workbench.activityBar.visible": true,
-    "workbench.colorTheme": "Darcula Theme from IntelliJ",
     // POWERMODE!!!
     "powermode.enabled": false,
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
@@ -33,13 +32,19 @@
         "editor.tabSize": 4
     },
     //
-    // SCSS Setting
+    // HTML Settings
+    "[html]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    //
+    // SCSS Settings
     "[scss]": {
         "editor.insertSpaces": true,
         "editor.tabSize": 2
     },
     //
-    // JavaScript / TypeScript
+    // JavaScript / TypeScript Settigns
     "[javascript]": {
         "editor.insertSpaces": true,
         "editor.tabSize": 2
@@ -49,5 +54,15 @@
         "editor.tabSize": 2
     },
     "javascript.preferences.quoteStyle": "single",
-    "typescript.preferences.quoteStyle": "single"
+    "typescript.preferences.quoteStyle": "single",
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true,
+        "**/*.pyc": {
+            "when": "$(basename).py"
+        },
+        "**/__pycache__": true
+    }
 }
