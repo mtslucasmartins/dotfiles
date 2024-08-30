@@ -3,7 +3,7 @@
 DOTFILES_PATH="$HOME/dotfiles"
 
 function main {
-	local stow_folders=(vim zsh)
+	local stow_folders=(vim tmux zsh)
 
 	pushd "$DOTFILES_PATH"
 
