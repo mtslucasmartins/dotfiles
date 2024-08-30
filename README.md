@@ -1,20 +1,17 @@
-# Lucas' Dotfiles
+# Public Dotfiles
 
 No need to explain what this is. 
 
 ## Installing
 
-Leverages `stow` to create symlinks. 
-
 ```sh
-  $ install 
+  $ zsh stow.sh 
 ```
 
 ## Uninstalling 
 
-Leverages `stow` again to "unstow" the packages. 
 
 ```
-  $ uninstall 
+  $ zsh unstow.sh
 ```
 
