@@ -2,7 +2,7 @@
 	path = personal
 	url = git@github.com:mtslucasmartins/personal-dotfiles.git
 
+
 [submodule "picpay"]
 	path = picpay
 	url = git@github.com:lucasmartinspicpay/picpay-dotfiles.git
-
