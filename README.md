@@ -1,6 +1,15 @@
 # Public Dotfiles
 
-No need to explain what this is. 
+## Requirements
+
+**stow**
+
+Stow is a symlink farm manager which helps store all configuration files in a common location. 
+
+**For MacOS**
+```zsh
+  $ brew install stow
+```
 
 ## Installing
 
