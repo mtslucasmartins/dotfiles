@@ -42,7 +42,7 @@ function parse_args {
 function stow_public {
 	print -r -- 'Public dotfiles (all machines): vim, tmux, zsh'
 	( cd "$DOTFILES_PATH" || exit 1
-		for folder in vim tmux zsh; do
+		for folder in vim tmux; do
 			print -r -- "  - Linking: '$folder'"
 			stow -D "$folder"
 			stow "$folder"
