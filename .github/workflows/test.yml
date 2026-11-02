@@ -1,7 +1,10 @@
 name: test
 
-# Runs the full bootstrap (./install twice + checks) on fresh machines.
-# All jobs run in parallel.
+# Runs the full bootstrap (./install twice + checks) on fresh machines,
+# including the private personal layer. All jobs run in parallel.
+#
+# Needs a repo secret PERSONAL_DOTFILES_DEPLOY_KEY: the private half of a
+# read-only deploy key on mtslucasmartins/personal-dotfiles.
 on:
   push:
   pull_request:
@@ -22,7 +25,12 @@ jobs:
         target: [ubuntu:24, ubuntu:26]
     steps:
       - uses: actions/checkout@v5
-      # Same Docker-based test as `make test TARGET=...`.
+      - name: Fetch personal submodule
+        env:
+          DEPLOY_KEY: ${{ secrets.PERSONAL_DOTFILES_DEPLOY_KEY }}
+        run: .github/fetch-personal.sh
+      # Same Docker-based test as `make test TARGET=...`; the container clones
+      # personal from this checkout.
       - run: tests/run_tests.sh --target=${{ matrix.target }}
 
   macos:
@@ -34,6 +42,10 @@ jobs:
       HOMEBREW_NO_INSTALL_CLEANUP: "1"
     steps:
       - uses: actions/checkout@v5
+      - name: Fetch personal submodule
+        env:
+          DEPLOY_KEY: ${{ secrets.PERSONAL_DOTFILES_DEPLOY_KEY }}
+        run: .github/fetch-personal.sh
       # No Docker for macOS: the runner is a fresh VM, so test on it directly.
       - run: bash tests/smoke.sh
         env:

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Bootstrap a machine: ./install          public + personal (if available)
-#                      ./install work     also the PicPay work layer
+# Bootstrap a machine:
+#   ./install                public + personal (personal is required)
+#   ./install work           also the PicPay work layer (required too)
+#   ./install --public-only  public layer only (e.g. a shared or throwaway box)
 #
 # Layers run in order, so later ones win where paths overlap:
 #   install.conf.yaml -> personal/install.conf.yaml -> picpay/install.conf.yaml
@@ -11,20 +13,30 @@ readonly BASEDIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly DOTBOT="$BASEDIR/dotbot/bin/dotbot"
 
 function usage {
-	echo "Usage: ./install [work]"
+	echo "Usage: ./install [work] [--public-only]"
 }
 
-# Private submodules use SSH; without keys they can't be cloned yet. That's
-# fine: the public layer still installs, and re-running later adds the rest.
-function try_submodule {
+# Clones a private submodule. They use SSH, so a new machine needs a key on
+# GitHub first; on failure, prints git's error and how to fix it.
+function get_submodule {
 	local name="$1" out
 	if ! out="$(git -C "$BASEDIR" submodule update --init "$name" 2>&1)"; then
-		echo "[install] '$name' layer skipped: can't clone the submodule (no SSH key or access?)" >&2
-		printf '%s\n' "$out" | tail -n 2 | sed 's/^/          /' >&2
+		cat >&2 <<EOF
+
+[install] ERROR: can't clone the '$name' submodule.
+$(printf '%s\n' "$out" | tail -n 2 | sed 's/^/          /')
+
+  This machine probably has no SSH key on GitHub yet. To fix it:
+    ssh-keygen -t ed25519 -C "\$(whoami)@\$(hostname)"
+    cat ~/.ssh/id_ed25519.pub     # add at https://github.com/settings/ssh/new
+    ssh -T git@github.com         # should greet you by username
+    ./install                     # re-run; finished steps are skipped
+
+EOF
 		return 1
 	fi
 	if [[ ! -f "$BASEDIR/$name/install.conf.yaml" ]]; then
-		echo "[install] '$name' layer skipped: $name/install.conf.yaml not found" >&2
+		echo "[install] ERROR: $name/install.conf.yaml not found." >&2
 		return 1
 	fi
 }
@@ -36,20 +48,36 @@ function run_layer {
 }
 
 function main {
-	local work=0
-	case "${1:-}" in
-		"") ;;
-		work) work=1 ;;
-		-h|--help) usage; exit 0 ;;
-		*) usage >&2; exit 2 ;;
-	esac
+	local work=0 personal=1 arg
+	for arg in "$@"; do
+		case "$arg" in
+			work) work=1 ;;
+			--public-only) personal=0 ;;
+			-h|--help) usage; exit 0 ;;
+			*) usage >&2; exit 2 ;;
+		esac
+	done
+	if ((work && !personal)); then
+		echo "[install] 'work' and '--public-only' can't be combined." >&2
+		exit 2
+	fi
 
 	cd "$BASEDIR"
 	git submodule update --init --recursive dotbot
 
+	# Public first: even without access to the private layers, the machine
+	# gets its shell and tools.
 	run_layer "$BASEDIR"
-	if try_submodule personal; then run_layer "$BASEDIR/personal"; fi
-	if ((work)) && try_submodule picpay; then run_layer "$BASEDIR/picpay"; fi
+	((personal)) || { echo "[install] done (public only)."; exit 0; }
+
+	get_submodule personal || exit 1
+	run_layer "$BASEDIR/personal"
+
+	if ((work)); then
+		get_submodule picpay || exit 1
+		run_layer "$BASEDIR/picpay"
+	fi
+	echo "[install] done."
 }
 
 main "$@"

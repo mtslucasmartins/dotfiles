@@ -99,6 +99,12 @@ function verify {
 	tool cargo      'asdf which cargo && cargo --version'
 	echo
 
+	tool gh         'gh --version'
+	tool awscli     'aws --version'
+	tool gcloud     'gcloud --version'
+	tool heroku     'heroku --version'
+	echo
+
 	check "~/.zshrc is linked."        test -L "$HOME/.zshrc"
 	check "~/.vimrc is linked."        test -L "$HOME/.vimrc"
 	check "~/.tmux.conf is linked."    test -L "$HOME/.tmux.conf"
@@ -111,6 +117,13 @@ function verify {
 		check "zsh is the login shell."   bash -c 'getent passwd "$(id -un)" | cut -d: -f7 | grep -q zsh'
 	fi
 
+	if [[ $ENTRY == *--public-only* ]]; then
+		echo "(personal layer not expected: --public-only)"
+	else
+		verify_personal
+	fi
+	echo
+
 	if command -v zsh >/dev/null 2>&1; then
 		local err
 		err="$(zsh -i -c exit </dev/null 2>&1 >/dev/null)"
@@ -122,6 +135,34 @@ function verify {
 		fi
 	else
 		ko "zsh starts without errors."
+	fi
+}
+
+# Every `alias name=...` in the personal aliases file must exist in a real zsh.
+function verify_personal {
+	local file="$DEST/personal/config/.config/personal/aliases"
+	check "~/.config/personal is linked." test -L "$HOME/.config/personal"
+
+	if [[ ! -f $file ]]; then
+		ko "personal aliases are loaded. (personal layer missing: $file)"
+		return
+	fi
+
+	local -a names=() missing=()
+	local name
+	while IFS= read -r name; do names+=("$name"); done \
+		< <(sed -nE 's/^[[:space:]]*alias[[:space:]]+([^=[:space:]]+)=.*/\1/p' "$file")
+
+	for name in "${names[@]}"; do
+		in_zsh "alias -- '$name'" || missing+=("$name")
+	done
+
+	if ((${#names[@]} == 0)); then
+		ko "personal aliases are loaded. (no aliases found in $file)"
+	elif ((${#missing[@]} == 0)); then
+		ok "all ${#names[@]} personal aliases are loaded."
+	else
+		ko "all ${#names[@]} personal aliases are loaded. Missing: ${missing[*]}"
 	fi
 }
 
