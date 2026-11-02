@@ -1,0 +1,40 @@
+name: test
+
+# Runs the full bootstrap (./install twice + checks) on fresh machines.
+# All jobs run in parallel.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ubuntu:24, ubuntu:26]
+    steps:
+      - uses: actions/checkout@v5
+      # Same Docker-based test as `make test TARGET=...`.
+      - run: tests/run_tests.sh --target=${{ matrix.target }}
+
+  macos:
+    name: macos
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@v5
+      # No Docker for macOS: the runner is a fresh VM, so test on it directly.
+      - run: bash tests/smoke.sh
+        env:
+          SRC: ${{ github.workspace }}

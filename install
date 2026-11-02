@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Bootstrap a machine: ./install          public + personal (if available)
+#                      ./install work     also the PicPay work layer
+#
+# Layers run in order, so later ones win where paths overlap:
+#   install.conf.yaml -> personal/install.conf.yaml -> picpay/install.conf.yaml
+
+set -euo pipefail
+
+readonly BASEDIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly DOTBOT="$BASEDIR/dotbot/bin/dotbot"
+
+function usage {
+	echo "Usage: ./install [work]"
+}
+
+# Private submodules use SSH; without keys they can't be cloned yet. That's
+# fine: the public layer still installs, and re-running later adds the rest.
+function try_submodule {
+	local name="$1"
+	if git -C "$BASEDIR" submodule update --init "$name" >/dev/null 2>&1 \
+		&& [[ -f "$BASEDIR/$name/install.conf.yaml" ]]; then
+		return 0
+	fi
+	echo "[install] '$name' layer not available (submodule missing or no access); skipping." >&2
+	return 1
+}
+
+function run_layer {
+	local dir="$1"
+	echo "[install] layer: ${dir#"$BASEDIR"/}"
+	"$DOTBOT" -x -d "$dir" -c "$dir/install.conf.yaml"
+}
+
+function main {
+	local work=0
+	case "${1:-}" in
+		"") ;;
+		work) work=1 ;;
+		-h|--help) usage; exit 0 ;;
+		*) usage >&2; exit 2 ;;
+	esac
+
+	cd "$BASEDIR"
+	git -C dotbot submodule sync --quiet --recursive 2>/dev/null || true
+	git submodule update --init --recursive dotbot
+
+	run_layer "$BASEDIR"
+	if try_submodule personal; then run_layer "$BASEDIR/personal"; fi
+	if ((work)) && try_submodule picpay; then run_layer "$BASEDIR/picpay"; fi
+}
+
+main "$@"

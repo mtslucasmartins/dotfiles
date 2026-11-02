@@ -1,90 +1,70 @@
-# Public Dotfiles
+# Dotfiles
 
-GNU **Stow** links configs into `$HOME`. Scripts live at the **repo root**; `DOTFILES_PATH` defaults to that directory (no need to clone to `~/dotfiles` unless you want to).
+Clone and run one command; [Dotbot](https://github.com/anishathalye/dotbot) links
+the configs and installs the tools.
+
+```sh
+git clone https://github.com/mtslucasmartins/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+./install          # public + personal layers
+./install work     # also the PicPay work layer
+```
+
+Needs only `git` and `python3`, which a fresh Ubuntu already has (on macOS, the
+Xcode Command Line Tools provide both). Re-running is safe: every step skips what's
+already done.
 
 ## Layers
 
-- **Public** (`vim`, `tmux`, `zsh`) — every machine.
-- **Personal** (`personal/` submodule) — linked automatically when the submodule exists.
-- **PicPay work** (`picpay/` submodule) — only on work PCs; use `--work`.
+| Layer | Config | Runs |
+|---|---|---|
+| Public | `install.conf.yaml` | always |
+| Personal | `personal/install.conf.yaml` (private submodule) | when it can be cloned |
+| Work | `picpay/install.conf.yaml` (private submodule) | with `./install work` |
 
-## Requirements
+Later layers win where paths overlap. The private submodules use SSH, so on a
+new machine without keys the public layer still installs; add your SSH key and
+run `./install` again to get the rest.
 
-Install Stow (e.g. macOS: `brew install stow`).
+## What gets installed
 
-## Installing
+One script per tool in `scripts/`, run in order by `install.conf.yaml`:
 
-From the repo root:
+| Script | Installs |
+|---|---|
+| `packages.sh` | zsh, git, curl, vim, tmux, tree, jq, unzip, fontconfig, Python build deps (apt / Homebrew) |
+| `oh-my-zsh.sh` | Oh My Zsh (keeps our `~/.zshrc`) |
+| `starship.sh` | Starship → `~/.local/bin` |
+| `fonts.sh` | Nerd Fonts (CodeNewRoman, Ubuntu), pinned by `NERD_FONTS_VERSION` |
+| `herdr.sh` | herdr → `~/.local/bin` (upgrade with `herdr update`) |
+| `golang.sh` | Go → `/usr/local/go`, pinned by `GO_VERSION` |
+| `asdf.sh` | asdf, its plugins, and every version in `asdf/.tool-versions` (java, maven, nodejs, python, rust/cargo, uv) |
+| `default-shell.sh` | Sets zsh as the login shell |
+
+To add a tool: write `scripts/<tool>.sh` (start with `source .../lib.sh` and
+`skip_if_installed <tool>`), then add a line to the `shell:` list.
+
+## Testing
+
+Runs the whole bootstrap in fresh Ubuntu containers (needs Docker):
 
 ```sh
-zsh stow.sh              # public + personal (if submodule checked out)
-zsh stow.sh --no-personal    # public only
-zsh stow.sh --work           # also link PicPay submodule (work machines)
+make test                          # ubuntu:24 and ubuntu:26, committed HEAD
+make test TARGET=ubuntu:26         # one target
+make test WORKTREE=1               # include uncommitted changes
+make test TARGET=ubuntu:24 DEBUG=1 # shell into the container afterwards
 ```
 
-Initialize submodules first, e.g.:
+Each run installs twice (the second run must change nothing), then checks the
+tools, symlinks, login shell, and that zsh starts without errors. macOS can't
+run in Docker; see `docs/how-it-works.md`.
 
-```sh
-git submodule update --init personal
-git submodule update --init personal picpay   # work machine
-```
+## Not wired in
 
-See **`docs/how-it-works.md`** for behavior and PicPay `stow.sh` expectations.
+`vscode/` and `themes/` are kept in the repo but not linked; copy them manually.
 
-## Uninstalling
+## Roadmap
 
-```sh
-zsh unstow.sh
-zsh unstow.sh --no-personal
-zsh unstow.sh --work
-```
---- 
-
-## Required Changes
-
-In order to get a better experience with this project, there are a few things we need to change.
-
----
-
-### Initialization 
-
-I want to be able to initialize after cloning this on an new machine like the following:
-```sh
-    # for a personal machine.
-    make init --personal
-
-    # for a work machine.
-    make init --work
-```
-
-A environment variable is set, that in the future will help identify current machine type `MACHINE_PROFILE`.
-
-### Packages and Dependencies
-
-We need to install dependencies first. So a `packages.yml` would be a good fit to this project, a single place to keep track of what needs to be installed without having to open sh files.
-
-A yml file could be better, since different packages might have different ways of being installed (apt, curl, npm, pip, etc...). 
-```yml
-tools:
-    - tree:
-        script: ...
-    - git:
-        script: ...
-
-applications:
-    - docker:
-        before: ... # could check if installed already.
-        script: ...
-    - awscli:
-        script: ...
-    - sdkman:
-       script: ...
-```
-
----
-
-### Secrets
-
-Secrets are not stored on tracked files, we have a global `{root}/{profile}/secrets` directory, where we can edit a `{root}/{profile}/secrets/.env.secrets` file.
-
-We could have a `make check-secrets`, to validate that we have all required secrets filled, based on a comparisson with `{root}/{profile}/secrets/.env.secrets.template`. It leverages `MACHINE_PROFILE` variable to check for the correct directory to validate.
+- **Secrets:** keep untracked `{profile}/secrets/.env.secrets`, with a
+  `make check-secrets` that compares it against a tracked `.env.secrets.template`.
+- **macOS CI:** a GitHub Actions `macos-latest` job running `./install`.

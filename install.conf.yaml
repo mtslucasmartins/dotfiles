@@ -1,0 +1,30 @@
+# Public layer: every machine. Directives run top to bottom.
+
+- defaults:
+    link:
+      create: true    # create parent directories
+      relink: true    # replace links that point elsewhere
+    shell:
+      stdout: true    # show installer output
+      stderr: true
+
+- clean: ['~']
+
+# Link first, so installers (e.g. oh-my-zsh) see our ~/.zshrc and keep it.
+- link:
+    ~/.zshrc: zsh/.zshrc
+    ~/.zsh_profile: zsh/.zsh_profile
+    ~/.vimrc: vim/.vimrc
+    ~/.tmux.conf: tmux/.tmux.conf
+    ~/.tool-versions: asdf/.tool-versions
+
+# Each tool has its own script; all of them skip when already installed.
+- shell:
+    - [scripts/packages.sh, System packages]
+    - [scripts/oh-my-zsh.sh, Oh My Zsh]
+    - [scripts/starship.sh, Starship]
+    - [scripts/fonts.sh, Nerd Fonts]
+    - [scripts/herdr.sh, herdr]
+    - [scripts/golang.sh, Go]
+    - [scripts/asdf.sh, asdf + languages from ~/.tool-versions]
+    - [scripts/default-shell.sh, Default shell -> zsh]

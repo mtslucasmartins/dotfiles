@@ -6,3 +6,6 @@
 	path = picpay
 	url = git@github.com:lucasmartinspicpay/picpay-dotfiles.git
 
+[submodule "dotbot"]
+	path = dotbot
+	url = https://github.com/anishathalye/dotbot
