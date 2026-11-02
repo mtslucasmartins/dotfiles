@@ -46,6 +46,10 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.PERSONAL_DOTFILES_DEPLOY_KEY }}
         run: .github/fetch-personal.sh
+      # The test clones personal from this checkout (a local path), which git
+      # blocks for submodules by default. The Docker images allow it the same
+      # way; the runner is thrown away after the job.
+      - run: git config --global protocol.file.allow always
       # No Docker for macOS: the runner is a fresh VM, so test on it directly.
       - run: bash tests/smoke.sh
         env:
