@@ -14,5 +14,8 @@ USER ubuntu
 WORKDIR /home/ubuntu
 ENV LANG=C.UTF-8 TERM=xterm-256color
 
-# The repo is mounted read-only from the host (different owner).
-RUN git config --global --add safe.directory '*'
+# The repo is mounted read-only from the host (different owner), and the test
+# clones private submodules from the host's local copy, which git blocks by
+# default for submodules. Test image only; never set this on a real machine.
+RUN git config --global --add safe.directory '*' \
+	&& git config --global protocol.file.allow always
