@@ -6,8 +6,9 @@ the configs and installs the tools.
 ```sh
 git clone https://github.com/mtslucasmartins/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-./install          # public + personal layers
-./install work     # also the PicPay work layer
+./install                # public + personal layers
+./install work           # also the PicPay work layer
+./install --public-only  # skip the private layers
 ```
 
 Needs only `git` and `python3`, which a fresh Ubuntu already has (on macOS, the
@@ -19,12 +20,12 @@ already done.
 | Layer | Config | Runs |
 |---|---|---|
 | Public | `install.conf.yaml` | always |
-| Personal | `personal/install.conf.yaml` (private submodule) | when it can be cloned |
+| Personal | `personal/install.conf.yaml` (private submodule) | always, unless `--public-only` |
 | Work | `picpay/install.conf.yaml` (private submodule) | with `./install work` |
 
-Later layers win where paths overlap. The private submodules use SSH, so on a
-new machine without keys the public layer still installs; add your SSH key and
-run `./install` again to get the rest.
+Later layers win where paths overlap. The private submodules use SSH. On a new
+machine without a key on GitHub, the public layer still installs, then
+`./install` stops with an error that shows how to add a key. Re-run it afterwards.
 
 ## What gets installed
 
@@ -39,6 +40,8 @@ One script per tool in `scripts/`, run in order by `install.conf.yaml`:
 | `herdr.sh` | herdr → `~/.local/bin` (upgrade with `herdr update`) |
 | `golang.sh` | Go → `/usr/local/go`, pinned by `GO_VERSION` |
 | `asdf.sh` | asdf, its plugins, and every version in `asdf/.tool-versions` (java, maven, nodejs, python, rust/cargo, uv) |
+| `gh.sh`, `gcloud.sh`, `heroku.sh` | GitHub, Google Cloud and Heroku CLIs from their official apt repos (Homebrew on macOS) |
+| `awscli.sh` | AWS CLI v2 from AWS's official installer (Homebrew on macOS) |
 | `default-shell.sh` | Sets zsh as the login shell |
 
 To add a tool: write `scripts/<tool>.sh` (start with `source .../lib.sh` and
@@ -56,7 +59,12 @@ make test TARGET=ubuntu:24 DEBUG=1 # shell into the container afterwards
 ```
 
 Each run installs twice (the second run must change nothing), then checks the
-tools, symlinks, login shell, and that zsh starts without errors. macOS can't
+tools, symlinks, login shell, that every alias in the personal aliases file is
+defined in zsh, and that zsh starts without errors.
+
+CI (`.github/workflows/test.yml`) runs the same test on Ubuntu 24.04, Ubuntu
+26.04 and macOS in parallel on every push. It fetches the personal submodule
+with a read-only deploy key stored in the `PERSONAL_DOTFILES_DEPLOY_KEY` secret. macOS can't
 run in Docker; see `docs/how-it-works.md`.
 
 ## Not wired in

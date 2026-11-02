@@ -27,4 +27,8 @@
     - [scripts/herdr.sh, herdr]
     - [scripts/golang.sh, Go]
     - [scripts/asdf.sh, asdf + languages from ~/.tool-versions]
+    - [scripts/gh.sh, GitHub CLI]
+    - [scripts/awscli.sh, AWS CLI]
+    - [scripts/gcloud.sh, Google Cloud CLI]
+    - [scripts/heroku.sh, Heroku CLI]
     - [scripts/default-shell.sh, Default shell -> zsh]
